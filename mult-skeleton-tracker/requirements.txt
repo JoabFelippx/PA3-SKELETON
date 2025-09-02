@@ -1,0 +1,17 @@
+# requirements.txt
+
+# 1. Instrução para o PyTorch (GPU com CUDA 12.1)
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+torchaudio
+
+# 2. Restante das dependências
+numpy
+opencv-python
+scipy
+networkx
+matplotlib
+filterpy
+ultralytics
+is-msgs

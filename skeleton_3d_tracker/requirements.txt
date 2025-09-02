@@ -1,0 +1,9 @@
+numpy
+opencv-python
+scipy
+networkx
+matplotlib
+filterpy
+is-wire
+is-msgs
+six

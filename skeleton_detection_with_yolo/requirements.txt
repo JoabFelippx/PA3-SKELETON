@@ -1,0 +1,6 @@
+is-wire
+is-msgs
+six
+
+opencv-python
+ultralytics 
