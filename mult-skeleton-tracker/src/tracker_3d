@@ -1,0 +1,11 @@
+class Track3D:
+
+    def __init__(self, id, skeleton_data, average_point, matched_persons):
+
+        self.id = id
+        self.skeleton_3d = skeleton_data
+        self.match_2d = matched_persons
+        self.KF = []
+        self.history_center_3d = []
+        self.age = 0
+        self.time_since_update = 0

@@ -24,7 +24,7 @@ class VideoProcessor:
         video_base_path = config['video_path']
         for i in range(1, self.num_cameras + 1):
             # Constrói o caminho completo para cada vídeo
-            video_path = os.path.join(video_base_path, f"camera_{i}.avi")
+            video_path = os.path.join(video_base_path, f"camera_{i}_cutted.mp4")
             cap = cv2.VideoCapture(video_path)
             if not cap.isOpened():
                 raise IOError(f"Não foi possível abrir o vídeo: {video_path}")
@@ -38,10 +38,10 @@ class VideoProcessor:
         undistort_img = cv2.undistort(image, npzCalib['K'], npzCalib['dist'], None, npzCalib['nK'])
         if 'roi' in npzCalib:
             x, y, w, h = npzCalib['roi']
-            return undistort_img[y:y+h, x:x+w]
+            return undistort_img[0:h, 0:w]
         return undistort_img
 
-    def process_next_frame(self) -> tuple[list, list] or tuple[None, None]:
+    def process_next_frame(self):
         """
         Lê o próximo frame de cada vídeo, executa a detecção e retorna os resultados.
         """

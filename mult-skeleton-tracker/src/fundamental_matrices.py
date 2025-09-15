@@ -3,8 +3,8 @@ import numpy as np
 
 class FundamentalMatrices:
     
-    # def __init__(self, camera_files: list):
-    #     self.camera_files = camera_files # Armazena a lista de arquivos
+    def __init__(self, camera_files: list):
+        self.camera_files = camera_files # Armazena a lista de arquivos
 
     def get_extrinsic_matrices(self, camera_files):
         """
@@ -21,9 +21,7 @@ class FundamentalMatrices:
     def _load_camera_parameters(self, calibration: str):
         
         camera_data = np.load(calibration)
-        
-        for i in camera_data:
-            print(i)
+     
         # Intrinsic matrix (3x3)
         nK = camera_data['nK']
         
@@ -90,9 +88,6 @@ class FundamentalMatrices:
         """
         P = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
 
-        print(P.shape)
-        print(T.shape)
-
         return K @ T
     
     def projection_matrices_all(self, camera_files: list):
@@ -115,6 +110,8 @@ class FundamentalMatrices:
         for c in range(len(camera_files)):
             
             # Load the camera parameters for the camera (c)
+            
+            
             rt, R, T, nK = self._load_camera_parameters(camera_files[c])
             
             # Calculate the projection matrix for the camera

@@ -91,5 +91,5 @@ class SkeletonsDetector:
         return obs
     
     def detect(self, image):
-        results = self._model.track(image, persist=True)
+        results = self._model.track(image, persist=True, verbose=False)
         return results[0]

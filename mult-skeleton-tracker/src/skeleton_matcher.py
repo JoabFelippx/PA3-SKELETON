@@ -61,7 +61,7 @@ class SkeletonMatcher:
             
         return skeletons_by_cam, ids_by_cam
     
-    def match(self, skeletons_by_cam: list, ids_by_cam: list) -> list[dict]:
+    def match(self, skeletons_by_cam: list, ids_by_cam: list):
 
         all_pairs = []
         

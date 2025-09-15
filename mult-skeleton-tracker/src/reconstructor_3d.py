@@ -7,11 +7,11 @@ class Reconstructor3D:
     Responsável por reconstruir esqueletos 3D a partir de um conjunto
     de esqueletos 2D correspondentes de múltiplas câmeras.
     """
-    def __init__(self, projection_matrices: list, config: dict):
+    def __init__(self, projection_matrices, config):
         self.projection_matrices = projection_matrices
         self.config = config
 
-    def _create_skeleton_objects_for_person(self, person_match: dict, all_annotations: list[ObjectAnnotations]) -> list:
+    def _create_skeleton_objects_for_person(self, person_match, all_annotations):
         """Cria os objetos 'Skeleton' para uma pessoa com correspondências encontradas."""
         skeleton_objects = []
         for cam_idx, sk_id in person_match.items():
@@ -23,7 +23,7 @@ class Reconstructor3D:
                         break
         return skeleton_objects
 
-    def _to_3d_keypoints_structure(self, skeleton_objs: list) -> dict:
+    def _to_3d_keypoints_structure(self, skeleton_objs):
         """
         Organiza os keypoints 2D, mapeando cada keypoint para as câmeras que o viram.
         """
@@ -45,7 +45,7 @@ class Reconstructor3D:
                 valid_keypoints_info[kp_idx] = cameras_with_point
         return valid_keypoints_info
 
-    def _reconstruct_points_from_svd(self, valid_keypoints_info: dict) -> dict:
+    def _reconstruct_points_from_svd(self, valid_keypoints_info):
         """Reconstrói os pontos 3D usando SVD para os keypoints com correspondências."""
         dots_3d_all = {}
         for kp_idx, cam_data in valid_keypoints_info.items():
@@ -64,7 +64,7 @@ class Reconstructor3D:
                 dots_3d_all[kp_idx] = [X[0], X[1], X[2]]
         return dots_3d_all
     
-    def reconstruct_all(self, matched_persons: list[dict], all_annotations: list[ObjectAnnotations]) -> list[dict]:
+    def reconstruct_all(self, matched_persons, all_annotations):
         """
         Executa o pipeline de reconstrução completo para todas as pessoas correspondentes.
         """
