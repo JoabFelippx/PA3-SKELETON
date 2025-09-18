@@ -271,6 +271,73 @@ class SORT_3D:
 
         return angle_cost
     
+    def _observation_centric_recovery( self, unmatched_detections, unmatched_trackers, points_3d, class_ids, ocr_multiplier=1.5, max_ocr_gap=10, use_maha=False, lambda_ocm=0.6):
+    
+        ocr_matches = []
+
+        for trk_idx in list(unmatched_trackers):
+            trk = self.trackers[trk_idx]
+
+            # só tentar OCR se track não está perdido há muito tempo
+            if trk.time_since_update > max_ocr_gap:
+                continue
+
+            if len(trk.observations) == 0:
+                continue
+
+            last_obs = np.asarray(trk.observations[-1]).reshape(3)
+
+            best_det = None
+            best_cost = float("inf")
+
+            for det_idx in list(unmatched_detections):
+                det_point = np.asarray(points_3d[det_idx]).reshape(3)
+
+                # custo posicional
+                if use_maha and hasattr(trk, "kf") and hasattr(trk.kf, "P"):
+                    try:
+                        P_pos = trk.kf.P[:3, :3]
+                        R = trk.kf.R if hasattr(trk.kf, "R") else np.eye(3) * 0.1
+                        S = P_pos + R
+                        diff = det_point - last_obs
+                        maha_sq = float(diff.T @ np.linalg.solve(S, diff))
+                        pos_cost = np.sqrt(maha_sq)
+                    except Exception:
+                        pos_cost = np.linalg.norm(det_point - last_obs)
+                else:
+                    pos_cost = np.linalg.norm(det_point - last_obs)
+
+                # custo OCM
+                ocm_cost = 0.0
+                try:
+                    ocm_cost = self._calculate_ocm_cost(trk, det_point)
+                except Exception:
+                    pass
+
+                combined_cost = pos_cost + lambda_ocm * ocm_cost
+
+                if combined_cost < best_cost:
+                    best_cost = combined_cost
+                    best_det = det_idx
+
+            # decidir se aceita match
+            ocr_thresh = self.dist_threshold * ocr_multiplier
+            if best_det is not None and best_cost < ocr_thresh:
+                new_obs = np.asarray(points_3d[best_det]).reshape(3)
+                lost_frames = trk.time_since_update
+                virtual_trajectory = linear_interpolate(last_obs, new_obs, lost_frames)
+
+                trk.reupdate_with_virtual_trajectory(virtual_trajectory, new_obs)
+
+                ocr_matches.append((best_det, trk_idx))
+
+                if best_det in unmatched_detections:
+                    unmatched_detections.remove(best_det)
+                if trk_idx in unmatched_trackers:
+                    unmatched_trackers.remove(trk_idx)
+
+        return ocr_matches, unmatched_detections, unmatched_trackers
+    
     def update(self, points_3d, class_ids=None):
         """
         Updates the tracker with new 3D detections.
@@ -289,7 +356,6 @@ class SORT_3D:
         """
         self.frame_count += 1
         
-        lambda_weight = 0.2
         
         # Convert input to numpy array if it isn't already
         points_3d = np.array(points_3d) if len(points_3d) > 0 else np.empty((0, 3))
@@ -311,7 +377,7 @@ class SORT_3D:
             
         # Associate detections to trackers using distance matrix and Hungarian algorithm
         
-        lambda_weight = 0.6
+        lambda_weight = 0.3
         if len(trks) > 0 and len(points_3d) > 0:
             # Compute distance matrix between predictions and detections
             dist_matrix = np.zeros((len(points_3d), len(trks)))
@@ -363,6 +429,8 @@ class SORT_3D:
                 trk.reupdate_with_virtual_trajectory(virtual_trajectory, new_obs)
             else:
                 trk.update(points_3d[det_idx], class_ids[det_idx])
+
+        ocr_matches, unmatched_detections, unmatched_trackers = self._observation_centric_recovery( unmatched_detections, unmatched_trackers, points_3d, class_ids)
 
         # Create new trackers for unmatched detections
         for det_idx in unmatched_detections:
